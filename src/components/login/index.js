@@ -8,7 +8,6 @@ class LoginComponent extends Component {
   constructor() {
     super();
     this.state = {
-      isReady: false,
     };
   }
 
