@@ -1,45 +1,65 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import _ from 'lodash';
+import IconButton from 'material-ui/IconButton';
+import SelectField from 'material-ui/SelectField';
+import {Toolbar, ToolbarGroup, ToolbarSeparator, ToolbarTitle} from 'material-ui/Toolbar';
+import {Card, CardActions, CardHeader, CardMedia} from 'material-ui/Card';
+import TextField from 'material-ui/TextField';
+import {
+  Table,
+  TableBody,
+  TableHeader,
+  TableHeaderColumn,
+  TableRow,
+  TableRowColumn,
+} from 'material-ui/Table';
+import FontIcon from 'material-ui/FontIcon';
+import CircularProgress from 'material-ui/CircularProgress';
+import MenuItem from 'material-ui/MenuItem';
 import { getInfoUsersAction } from '../../../actions/index.js';
 
 class UsersComponent extends Component {
   constructor() {
     super();
     this.state = {
-      listUser: null,
       textSearch: '',
       listChunk: [],
       index: 0,
-      num: 0
+      num: 0,
+      value: 100
     };
     this.handleChange = this.handleChange.bind(this);
-    this.paginations = this.paginations.bind(this);
   }
 
   componentDidMount() {
     this.props.getInfoUsersAction();
+    if (this.props.listUsers.length > 0) {
+      const users = _.chunk(this.props.listUsers, this.state.value);
+      this.setState({
+        listChunk: users,
+        num: users.length
+      });
+    }
   }
 
   componentWillReceiveProps(nextProps) {
-    if (nextProps.listUsers !== undefined) {
-      const users = _.chunk(nextProps.listUsers, 300);
+    if (nextProps.listUsers !== undefined && nextProps.listUsers.length !== this.props.listUsers.length) {
+      const users = _.chunk(nextProps.listUsers, this.state.value);
       this.setState({
-        listUser: nextProps.listUsers,
-        listChunk: users[this.state.index],
+        listChunk: users,
         num: users.length
-      })
+      });
     }
   }
 
   infoByUser = (item, key) => {
     return (
-      <tr key={key}>
-        <th>{item.info.name}</th>
-        <td>{item.info.name}</td>
-        <td>{item.info.name}</td>
-        <td><button onClick={() => this.goInfoByUser(key)} type="button" class="btn btn-link">Link</button></td>
-      </tr>
+      <TableRow key={key}>
+        <TableRowColumn>{item.info.name}</TableRowColumn>
+        <TableRowColumn>{item.info.name}</TableRowColumn>
+        <TableRowColumn><button onClick={() => this.goInfoByUser(item.uid)} type="button" className="btn btn-link">Link</button></TableRowColumn>
+      </TableRow>
     );
   };
 
@@ -47,9 +67,11 @@ class UsersComponent extends Component {
     const value = event.target.value;
     const searchUsers = _.filter(this.props.listUsers,
       (user) => _.startsWith(user.info.name, value));
+    const users = _.chunk(searchUsers, this.state.value);
     this.setState({
       textSearch: value,
-      listUser: searchUsers
+      listChunk: users,
+      index: 0
     });
   }
 
@@ -57,59 +79,97 @@ class UsersComponent extends Component {
     console.log(key);
   }
 
-  paginations = () => {
-    for (let i = 0; i < this.state.num; i++) {
-      return (
-        <li class="page-item"><a class="page-link">{i+1}</a></li>
-      );
-    }
+  changePage = (i) => {
+    this.setState({
+      index: i
+    });
+  }
+
+  paginations = (item, i) => {
+    return (
+      <li key={i} className="page-item">
+        <button onClick={() => this.changePage(i)} className="page-link">{i+1}</button>
+      </li>
+    );
+  }
+
+  previousPage = () => {
+    this.setState({
+      index: this.state.index - 1
+    });
+  }
+  nextPage = () => {
+    this.setState({
+      index: this.state.index + 1
+    });
+  }
+
+  handleChangeSelect = (event, index, value) => {
+    const users = _.chunk(this.props.listUsers, value);
+    this.setState({
+      listChunk: users,
+      num: users.length,
+      index: 0,
+      value
+    })
   }
 
   render() {
     const { listChunk } = this.state;
     return (
-      <div class="container-fluid">
-        <div class="input-group mb-3">
-          <div class="input-group-prepend">
-            <span class="input-group-text" id="basic-addon1">Buscar</span>
-          </div>
-          <input
-            type="text"
-            class="form-control"
-            placeholder="Username"
-            aria-label="Username"
-            aria-describedby="basic-addon1"
-            onChange={this.handleChange}
-            value={this.state.textSearch}
-          />
+      <div className="container">
+      {listChunk.length > 0 ?
+       <Card>
+       <Toolbar>
+       <ToolbarGroup>
+       <TextField hintText="Buscar" onChange={this.handleChange} />
+       </ToolbarGroup>
+       </Toolbar>
+       <CardMedia>
+        <Table
+          selectable={false}>
+          <TableHeader displaySelectAll={false}>
+            <TableRow>
+              <TableHeaderColumn>ID</TableHeaderColumn>
+              <TableHeaderColumn>Name</TableHeaderColumn>
+              <TableHeaderColumn>Status</TableHeaderColumn>
+            </TableRow>
+          </TableHeader>
+          <TableBody displayRowCheckbox={false}>
+            {_.map(listChunk[this.state.index], this.infoByUser)}
+          </TableBody>
+        </Table>
+        </CardMedia>
+        <CardActions>
+        <SelectField
+          floatingLabelText="Frequency"
+          value={this.state.value}
+          onChange={this.handleChangeSelect}
+        >
+          <MenuItem value={100} primaryText="100" />
+          <MenuItem value={500} primaryText="500" />
+          <MenuItem value={1000} primaryText="1000" />
+        </SelectField>
+        <div className="pagination justify-content-end">
+        <IconButton
+          disabled={this.state.index === 0 ? true : false}
+          onClick={() =>  this.previousPage()}
+          tooltip="Anterior"
+          tooltipPosition="bottom-right"
+        ><i className="material-icons">keyboard_arrow_left</i></IconButton>
+        <p className="font-Italic">{`${this.state.index+1}/${listChunk.length}`}</p>
+        <IconButton
+          disabled={this.state.index === listChunk.length - 1 ? true : false}
+          onClick={() =>  this.nextPage()}
+          tooltip="Siguiente"
+          tooltipPosition="bottom-left"
+        ><i className="material-icons">keyboard_arrow_right</i></IconButton>
         </div>
-        {listChunk !== null ?
-          <table class="table">
-            <thead class="thead-light">
-              <tr>
-                <th scope="col">#</th>
-                <th scope="col">First</th>
-                <th scope="col">Last</th>
-                <th scope="col">Handle</th>
-              </tr>
-            </thead>
-            <tbody>
-            {_.map(listChunk, this.infoByUser)}
-            </tbody>
-          </table>
-          : null
-        }
-        <nav aria-label="Page navigation example">
-          <ul class="pagination justify-content-end">
-            <li class="page-item disabled">
-              <a class="page-link" tabindex="-1">Previous</a>
-            </li>
-            {this.paginations}
-            <li class="page-item">
-              <a class="page-link">Next</a>
-            </li>
-          </ul>
-        </nav>
+        </CardActions>
+        </Card>
+        :
+        <CircularProgress size={80} thickness={5} />
+      }
      </div>
     );
   }

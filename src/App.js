@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import firebase from 'firebase';
 import ReduxThunk from 'redux-thunk';
 import { createStore, applyMiddleware } from 'redux';
+import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import { Provider } from 'react-redux';
 import { BrowserRouter } from 'react-router-dom';
 import reducer from './reducers/index.js';
@@ -34,9 +35,11 @@ class App extends Component {
     if (this.state.isReady) {
       return (
         <Provider store={store}>
+        <MuiThemeProvider>
           <BrowserRouter>
             <Router />
           </BrowserRouter>
+          </MuiThemeProvider>
         </Provider>
       );
     } else {

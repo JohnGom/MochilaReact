@@ -3,23 +3,20 @@ import {
   LOGIN_USER
 } from './types';
 
-export const SignInAction = ({ username, password, language }) => {
+export const SignInAction = ({ username, password }) => {
 
-  const email = `${username}@lamochila.com`;
+  const email = `${username}@lamochilaweb.com`;
   return (dispatch) => {
     firebase.auth().signInWithEmailAndPassword(email, password)
     .then((info) => {
-
-      dispatch({
-        type: LOGIN_USER,
-      });
+      dispatch({ type: LOGIN_USER, payload: true });
     })
     .catch((error) => {
       const errorCode = error.code;
       if (errorCode === 'auth/user-not-found') {
-        console.log('user no found');
+        dispatch({ type: LOGIN_USER, payload: false });
       } else if (errorCode === 'auth/wrong-password') {
-        console.log('user no found');
+        dispatch({ type: LOGIN_USER, payload: false });
       }
     });
   };

@@ -1,8 +1,8 @@
-/*body{background: #eee url(http://subtlepatterns.com/patterns/sativa.png);}
-html,body{
+body{
+    background: #eee url(http://subtlepatterns.com/patterns/sativa.png);
     position: relative;
     height: 100%;
-}*/
+}
 
 .login-container{
     position: relative;
@@ -89,6 +89,10 @@ html,body{
 .form-box button.login{
     margin-top:15px;
     padding: 10px 20px;
+}
+
+.login {
+  margin-top:15px;
 }
 
 .animated {
